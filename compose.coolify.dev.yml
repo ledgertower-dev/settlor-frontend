@@ -1,6 +1,6 @@
 services:
   leopay-fe-dev:
-    image: registry.zethic.xyz/leopay-fe-dev
+    image: registry.settlor.xyz/leopay-fe-dev
     build:
       context: .
       dockerfile: Dockerfile
