@@ -58,7 +58,7 @@ export function DocsTopBar() {
 
       <div className="flex items-center gap-2">
         <Image
-          src="/logos/leopay-logo-form.png"
+          src="/logos/settlor-logo-form.png"
           alt="Settlor.Money"
           width={127}
           height={43}

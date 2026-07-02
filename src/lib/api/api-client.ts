@@ -13,7 +13,7 @@ function clearAuthState() {
   try {
     // Clear cookies used by proxy middleware for auth checks
     document.cookie = 'csrf_token=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT'
-    document.cookie = 'leopay_role=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT'
+    document.cookie = 'settlor_role=;path=/;expires=Thu, 01 Jan 1970 00:00:00 GMT'
   } catch {
     // Fail silently — redirect will still happen
   }
