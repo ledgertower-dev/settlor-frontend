@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server'
  * Next.js Proxy for Authentication & Role-Based Routing (Next.js 16+)
  *
  * - Protects dashboard routes by checking for csrf_token cookie (set by backend in cookie auth mode)
- * - Validates role prefix in URL matches the user's account type from leopay_role cookie
+ * - Validates role prefix in URL matches the user's account type from settlor_role cookie
  * - Redirects old flat routes (e.g. /dashboard) to role-prefixed versions
  */
 
@@ -34,7 +34,7 @@ const AUTH_ROUTES_ALLOW_AUTHENTICATED = [
 
 // Cookie names
 const CSRF_TOKEN_COOKIE = 'csrf_token'
-const ROLE_COOKIE = 'leopay_role'
+const ROLE_COOKIE = 'settlor_role'
 
 /**
  * Check if the path starts with a valid role prefix.

@@ -24,7 +24,7 @@ export function AuthPageLayout({ children }: AuthPageLayoutProps) {
           <div className="flex flex-col gap-12 xl:gap-18">
             {/* Logo */}
             <Image
-              src="/logos/leopay-logo-dark.png"
+              src="/logos/settlor-logo-dark.png"
               alt="Settlor.Money"
               width={70}
               height={70}
@@ -66,7 +66,7 @@ export function AuthPageLayout({ children }: AuthPageLayoutProps) {
               {/* Logo block */}
               <div className="flex flex-col gap-1.5">
                 <Image
-                  src="/logos/leopay-logo-form.png"
+                  src="/logos/settlor-logo-form.png"
                   alt="Settlor.Money"
                   width={127}
                   height={43}
