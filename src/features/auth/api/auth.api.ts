@@ -22,7 +22,7 @@ import type {
   TwoFactorResendRequest,
 } from '../types'
 
-const ROLE_COOKIE = 'leopay_role'
+const ROLE_COOKIE = 'settlor_role'
 
 function setRoleCookie(accountType: string) {
   if (typeof document === 'undefined') return

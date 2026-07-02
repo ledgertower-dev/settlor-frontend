@@ -58,14 +58,14 @@ export function AuthGuard({
       }
 
       // Authoritative role-prefix enforcement. The middleware uses the client-writable
-      // `leopay_role` cookie (spoofable), so we re-check the URL prefix against the
+      // `settlor_role` cookie (spoofable), so we re-check the URL prefix against the
       // server-validated account type from /auth/me. A tampered cookie is corrected
       // here and kept in sync so the middleware's next decision is right too.
       if (user && !requirePasswordChange) {
         const realRole = accountTypeToRolePrefix(user.accountType)
         const urlRole = pathname.split('/')[1]
         if ((urlRole === 'admin' || urlRole === 'merchant') && urlRole !== realRole) {
-          document.cookie = `leopay_role=${realRole};path=/;SameSite=Lax`
+          document.cookie = `settlor_role=${realRole};path=/;SameSite=Lax`
           router.replace(`/${realRole}/dashboard`)
           return
         }
@@ -88,7 +88,7 @@ export function AuthGuard({
       <div className="flex min-h-screen items-center justify-center bg-muted dark:bg-background">
         <div className="flex flex-col items-center gap-4">
           <Image
-            src="/logos/leopay-logo-form.png"
+            src="/logos/settlor-logo-form.png"
             alt="Settlor.Money"
             width={127}
             height={43}
