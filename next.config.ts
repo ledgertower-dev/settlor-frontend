@@ -4,7 +4,7 @@ const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
 const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001'
 
 // Comma-separated list of storage hosts that serve presigned upload/download
-const storageOrigins = (process.env.NEXT_PUBLIC_STORAGE_ORIGINS || 'https://minio.zethic.xyz')
+const storageOrigins = (process.env.NEXT_PUBLIC_STORAGE_ORIGINS || 'https://minio.settlor.xyz')
   .split(',')
   .map(s => s.trim())
   .filter(Boolean)

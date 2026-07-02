@@ -1,7 +1,7 @@
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: ['config:recommended', ':semanticCommits', 'schedule:weekends', 'group:allNonMajor'],
-  reviewers: ['arpitanandzethic'],
+  reviewers: ['arpitanandsettlor'],
   labels: ['dependencies'],
   rangeStrategy: 'bump',
   prHourlyLimit: 0,
