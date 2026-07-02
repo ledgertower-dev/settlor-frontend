@@ -1,0 +1,2 @@
+yarn typecheck || exit 1
+yarn test || exit 1
