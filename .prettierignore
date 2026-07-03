@@ -6,3 +6,4 @@ package-lock.json
 yarn.lock
 **/*.snap
 .claude/
+UPSTREAM_SYNC.md
