@@ -25,21 +25,10 @@ RUN yarn install --frozen-lockfile --production=false
 FROM node:24.14.1-alpine AS builder
 WORKDIR /app
 
-# Build arguments for Next.js public environment variables
-# These are embedded into the build at compile time — must be provided by
-# the deploy pipeline (e.g. Coolify build vars). No localhost defaults, to
-# prevent silent CSP misconfigurations in deployed images.
-ARG NEXT_PUBLIC_API_BASE_URL
-ARG NEXT_PUBLIC_WS_URL
-ARG NEXT_PUBLIC_ENABLE_AUTH_LOGS=false
-
-RUN [ -n "$NEXT_PUBLIC_API_BASE_URL" ] || (echo "NEXT_PUBLIC_API_BASE_URL build-arg is required" >&2 && exit 1)
-RUN [ -n "$NEXT_PUBLIC_WS_URL" ] || (echo "NEXT_PUBLIC_WS_URL build-arg is required" >&2 && exit 1)
-
-# Set build-time environment variables
-ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
-ENV NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL}
-ENV NEXT_PUBLIC_ENABLE_AUTH_LOGS=${NEXT_PUBLIC_ENABLE_AUTH_LOGS}
+# Placeholder values so next build can inline NEXT_PUBLIC_* references.
+# Real values are injected at container startup via docker-entrypoint.sh.
+ENV NEXT_PUBLIC_API_BASE_URL=http://placeholder \
+    NEXT_PUBLIC_WS_URL=ws://placeholder
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 # Explicitly set HOSTNAME to prevent capturing build container's ID
@@ -77,6 +66,10 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
+# Copy entrypoint script that generates runtime env vars
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
 # Change ownership to non-root user
 RUN chown -R nextjs:nodejs /app
 
@@ -91,5 +84,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" || exit 1
 
-# Start the Next.js production server
-CMD ["node", "server.js"]
+# Start via entrypoint that generates runtime env config
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
