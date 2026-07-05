@@ -1,12 +1,49 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 /**
- * Next.js Proxy for Authentication & Role-Based Routing (Next.js 16+)
+ * Next.js Proxy for Authentication, Role-Based Routing & Security Headers (Next.js 16+)
  *
  * - Protects dashboard routes by checking for csrf_token cookie (set by backend in cookie auth mode)
  * - Validates role prefix in URL matches the user's account type from settlor_role cookie
  * - Redirects old flat routes (e.g. /dashboard) to role-prefixed versions
+ * - Sets CSP and security headers using runtime env vars (not build-time)
  */
+
+function setSecurityHeaders(response: NextResponse, pathname: string): void {
+  const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
+  const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001'
+
+  const storageOrigins = (process.env.NEXT_PUBLIC_STORAGE_ORIGINS || 'https://minio.settlor.xyz')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean)
+    .join(' ')
+
+  const csp = [
+    "default-src 'self'",
+    `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV !== 'production' ? " 'unsafe-eval'" : ''}`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    `img-src 'self' data: blob: https://via.placeholder.com ${apiUrl} ${storageOrigins}`,
+    "font-src 'self' https://fonts.gstatic.com",
+    `connect-src 'self' ${apiUrl} ${wsUrl} ${wsUrl.replace('ws', 'wss')} ${storageOrigins}`,
+    "frame-ancestors 'self'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join('; ')
+
+  // Prevent caching of runtime env config — values change per deployment
+  if (pathname === '/__env.js') {
+    response.headers.set('Cache-Control', 'no-store, must-revalidate')
+  }
+
+  response.headers.set('Content-Security-Policy', csp)
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('X-DNS-Prefetch-Control', 'on')
+  response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+  response.headers.set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()')
+}
 
 // Valid role prefixes
 const VALID_ROLE_PREFIXES = ['/admin', '/merchant']
@@ -106,7 +143,9 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  return NextResponse.next()
+  const response = NextResponse.next()
+  setSecurityHeaders(response, pathname)
+  return response
 }
 
 export const config = {
