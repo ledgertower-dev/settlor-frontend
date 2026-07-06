@@ -9,14 +9,39 @@ import { NextResponse, type NextRequest } from 'next/server'
  * - Sets CSP and security headers using runtime env vars (not build-time)
  */
 
-function setSecurityHeaders(response: NextResponse, pathname: string): void {
-  const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
-  const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001'
+/**
+ * Read an env var at REQUEST time.
+ *
+ * Next.js statically inlines every literal `process.env.NEXT_PUBLIC_*` reference
+ * at build time. Because the Docker image is built once with placeholder URLs
+ * (see Dockerfile) and the real URLs are injected at container startup, a direct
+ * `process.env.NEXT_PUBLIC_API_BASE_URL` read here would be frozen to the
+ * build-time placeholder — which is what previously baked `http://placeholder`
+ * into the CSP and blocked all API/WebSocket calls. Reading via a computed key
+ * defeats the inlining, so the proxy (Node.js runtime) sees the real runtime value.
+ */
+function runtimeEnv(key: string): string | undefined {
+  return process.env[key]
+}
 
+function setSecurityHeaders(response: NextResponse, pathname: string): void {
+  const apiUrl = runtimeEnv('NEXT_PUBLIC_API_BASE_URL') || 'http://localhost:3001'
+  const wsUrl = runtimeEnv('NEXT_PUBLIC_WS_URL') || 'ws://localhost:3001'
+  // Also allow the secure WebSocket variant (ws:// -> wss://); leaves wss:// untouched.
+  const wssUrl = wsUrl.replace(/^ws:\/\//, 'wss://')
+
+  // NOTE: unlike the API/WS URLs, this is read at build time (statically inlined).
+  // It works today because CI provides NEXT_PUBLIC_STORAGE_ORIGINS at build. If the
+  // storage origin ever needs to be injected at runtime, switch this to runtimeEnv()
+  // AND make sure the value is present in the container's runtime environment.
   const storageOrigins = (process.env.NEXT_PUBLIC_STORAGE_ORIGINS || 'https://minio.settlor.xyz')
     .split(',')
     .map(s => s.trim())
     .filter(Boolean)
+    .join(' ')
+
+  const connectSrc = [...new Set(['self', apiUrl, wsUrl, wssUrl].filter(Boolean))]
+    .map(s => (s === 'self' ? "'self'" : s))
     .join(' ')
 
   const csp = [
@@ -25,7 +50,7 @@ function setSecurityHeaders(response: NextResponse, pathname: string): void {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     `img-src 'self' data: blob: https://via.placeholder.com ${apiUrl} ${storageOrigins}`,
     "font-src 'self' https://fonts.gstatic.com",
-    `connect-src 'self' ${apiUrl} ${wsUrl} ${wsUrl.replace('ws', 'wss')} ${storageOrigins}`,
+    `connect-src ${connectSrc} ${storageOrigins}`,
     "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'",
